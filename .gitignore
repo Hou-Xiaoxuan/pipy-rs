@@ -1,1 +1,8 @@
 /target
+
+# for vs code
+/.vscode
+
+# for macos
+
+.DS_Store
