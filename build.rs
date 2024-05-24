@@ -1,15 +1,14 @@
 use cmake::Config;
 
 fn main() {
-    // TODO Randomly compilable now.
     let mut config = Config::new("libs/pipy");
 
-    // Build `pipy` as a shared library **should edit the CMakeLists.txt to support shared library**
-    config.define("PIPY_SHARED", "On");
+    config.define("PIPY_SHARED", "ON");
     config.define("CMAKE_BUILD_PARALLEL_LEVEL", "4");
 
     // build
     let dst = config.build();
+    
     // ** `cargo:rustc-*` format is used to pass information to the cargo build system
     // add the path to the library to the linker search path
     println!("cargo:rustc-link-search={}/build/", dst.display());
