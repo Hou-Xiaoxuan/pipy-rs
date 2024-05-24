@@ -1,14 +1,25 @@
+use std::env;
+
 use cmake::Config;
 
 fn main() {
+    let profile = env::var("PROFILE").unwrap();
+
     let mut config = Config::new("libs/pipy");
 
+    // TODO: change to static library
     config.define("PIPY_SHARED", "ON");
-    config.define("CMAKE_BUILD_PARALLEL_LEVEL", "4");
+    config.define("CMAKE_BUILD_PARALLEL_LEVEL", "4"); // didn't work, compile too slow
+
+    if profile == "release" {
+        config.define("CMAKE_BUILD_TYPE", "Release");
+    } else {
+        config.define("CMAKE_BUILD_TYPE", "Debug");
+    }
 
     // build
     let dst = config.build();
-    
+
     // ** `cargo:rustc-*` format is used to pass information to the cargo build system
     // add the path to the library to the linker search path
     println!("cargo:rustc-link-search={}/build/", dst.display());
