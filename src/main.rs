@@ -1,11 +1,6 @@
-/// a test demo for pipy
 use libc::{c_char, c_int};
+/// a test demo for pipy
 use std::ffi::CString;
-
-#[link(name = "pipy", kind = "dylib")]
-extern "C" {
-    fn pipy_main(argc: c_int, argv: *const *const c_char) -> c_int;
-}
 
 fn main() {
     let args: Vec<CString> = std::env::args()
@@ -15,6 +10,6 @@ fn main() {
     let c_args: Vec<*const c_char> = args.iter().map(|arg| arg.as_ptr()).collect();
 
     unsafe {
-        pipy_main(c_args.len() as c_int, c_args.as_ptr());
+        pipy_rs::pipy_main(c_args.len() as c_int, c_args.as_ptr());
     }
 }
