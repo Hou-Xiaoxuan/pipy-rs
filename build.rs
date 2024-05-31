@@ -21,8 +21,10 @@ fn main() {
     let dst = config.build();
 
     // ** `cargo:rustc-*` format is used to pass information to the cargo build system
-    // add the path to the library to the linker search path
-    println!("cargo:rustc-link-search={}/build/", dst.display());
+    // parse to `rustc` to look for dynamic library, used in running
+    println!("cargo:rustc-link-arg=-Wl,-rpath,{}/build", dst.display());
+    // add the path to the library to the linker search path, used in build
+    println!("cargo:rustc-link-search={}/build", dst.display());
 
     // according to `pipy bind_.pdf`, didn't know reason temporarily
     // but in macos, if i use pipy in `lib.rs` but not in `main.rs`, below code cause error, didn't know reason, so comment it
