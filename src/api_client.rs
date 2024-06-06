@@ -64,6 +64,7 @@ pub mod api {
     }
 
     #[derive(Serialize, Deserialize, Debug)]
+    #[serde(rename_all = "camelCase")]
     pub struct Codebase {
         pub version: String,
         pub path: String,
@@ -73,7 +74,7 @@ pub mod api {
         pub erased_files: Vec<String>,
         pub base_files: Vec<String>,
         pub derived: Vec<String>,
-        pub instances: Vec<String>,
+        // pub instances: Vec<String>, // TODO: didn't know schema, ignore temporarily
     }
 
     /// GET /api/v1/repo
@@ -82,13 +83,16 @@ pub mod api {
         let resp = reqwest::get(&url).await?;
         tracing::debug!("Response: {:?}", resp);
         // split the response by '\n'
-        let codebase_list: Vec<String> = resp
-            .text()
-            .await?
-            .split('\n')
-            .map(|s| s[1..].to_string()) // remove prefix '/'
-            .collect();
-        Ok(codebase_list)
+        let test = resp.text().await?;
+        if test.is_empty() {
+            return Ok(vec![]);
+        } else {
+            let codebase_list = test
+                .split('\n')
+                .map(|s| s[1..].to_string()) // remove prefix '/'
+                .collect();
+            Ok(codebase_list)
+        }
     }
 
     /// POST /api/v1/repo/[CODEBASE]
@@ -122,6 +126,7 @@ pub mod api {
         let resp = reqwest::get(&url).await?;
         tracing::debug!("Response: {:?}", resp);
         let data = resp.bytes().await?;
+        tracing::debug!("Data: {:?}", data);
         let codebase: Codebase = serde_json::from_slice(&data)?;
         Ok(codebase)
     }
@@ -134,7 +139,9 @@ pub mod api {
         file_name: &str,
     ) -> Result<Vec<u8>, ApiError> {
         let codebase_info = get_codebase(host, port, codebase_name).await?;
-        if !codebase_info.files.contains(&file_name.to_string()) {
+        if !codebase_info.files.contains(&file_name.to_string())
+            && !codebase_info.files.contains(&format!("/{}", file_name))
+        {
             return Err(ApiError::NotFountError(file_name.to_string()));
         }
 
@@ -222,12 +229,19 @@ pub mod api {
         Ok(())
     }
 }
+
 mod tests {
-    use libc::exit;
+    use std::thread::sleep;
 
-    use crate::{start_pipy_repo, util::init_logger};
+    use reqwest::Client;
 
-    use super::api::*;
+    use crate::{
+        api_client::api::ApiError,
+        start_pipy_repo,
+        util::{init_debug_logger, init_logger},
+    };
+
+    use super::{api::Codebase, ApiClient};
 
     #[test]
     fn test_codebase_serde() {
@@ -276,12 +290,38 @@ mod tests {
 
     #[tokio::test]
     async fn test_api() {
-        init_logger();
+        init_debug_logger();
+        let pipy_port = 6060;
+        start_pipy_repo(Some(pipy_port));
 
-        start_pipy_repo(Some(6060));
-        unimplemented!();
+        let repo_name = "hello";
+        let client = ApiClient::new("127.0.0.1", pipy_port);
+        matches!(
+            client.get_codebase(repo_name).await.err().unwrap(),
+            ApiError::NotFountError(_)
+        );
+
+        // create codebase
+        client.create_codebase(repo_name).await.unwrap();
+        let _ = client.get_codebase(repo_name).await.unwrap();
+
+        let default_main_js = client.get_file(repo_name, "main.js").await.unwrap();
+        tracing::info!(
+            "default_main_js:\n {:?}",
+            String::from_utf8_lossy(&default_main_js)
+        );
+        let main_js = r#"pipy().listen(8080).serveHTTP(new Message('Hello world!'))"#;
+        client
+            .update_file(repo_name, "main.js", main_js.as_bytes().to_vec())
+            .await
+            .unwrap();
+        client.publish_changes(repo_name).await.unwrap(); // TODO: update_file seems not work, api may be wrong
+
+        let codebase = client.get_codebase(repo_name).await.unwrap();
+        println!("{:?}", codebase);
+
         unsafe {
-            exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
+            libc::exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
         }
     }
 }

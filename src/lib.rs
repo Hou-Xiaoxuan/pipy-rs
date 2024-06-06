@@ -9,7 +9,7 @@ extern "C" {
     pub fn pipy_main(argc: c_int, argv: *const *const c_char) -> c_int;
 }
 /// start pipy in repo mod with port, default port is 6060
-pub fn start_pipy_repo(port: Option<usize>) {
+pub fn start_pipy_repo(port: Option<u16>) {
     thread::spawn(move || {
         let mut args: Vec<CString> = vec![];
         args.push(CString::new("pipy-rs").unwrap());
@@ -31,25 +31,21 @@ mod tests {
     use util::init_logger;
 
     use super::*;
-    use api_client::api;
     #[tokio::test]
     async fn test_start_pipy_repo() {
         init_logger();
+        let port = 6061;
+        let client = api_client::ApiClient::new("127.0.0.1", port);
+        start_pipy_repo(Some(port));
+        client.create_codebase("test1").await.unwrap();
+        client.create_codebase("test2").await.unwrap();
 
-        start_pipy_repo(Some(6060));
-        api::create_codebase("127.0.0.1", 6060, "test1")
-            .await
-            .unwrap();
-        api::create_codebase("127.0.0.1", 6060, "test2")
-            .await
-            .unwrap();
-
-        let codebase_list = api::get_codebase_list("127.0.0.1", 6060).await;
+        let codebase_list = client.get_codebase_list().await;
         assert!(codebase_list.is_ok());
         let codebase_list = codebase_list.unwrap();
         tracing::info!("codebase_list: {:?}", codebase_list);
-        assert!(codebase_list.contains(&"/test1".to_string()));
-        assert!(codebase_list.contains(&"/test2".to_string()));
+        assert!(codebase_list.contains(&"test1".to_string()));
+        assert!(codebase_list.contains(&"test2".to_string()));
         unsafe {
             libc::exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
         }
