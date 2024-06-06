@@ -2,7 +2,7 @@
 use libc::{c_char, c_int};
 use std::{ffi::CString, thread};
 
-pub mod api;
+pub mod api_client;
 mod util;
 #[link(name = "pipy", kind = "dylib")]
 extern "C" {
@@ -23,21 +23,20 @@ pub fn start_pipy_repo(port: Option<usize>) {
             pipy_main(c_args.len() as c_int, c_args.as_ptr());
         }
     });
+    thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to start
 }
 
 #[cfg(test)]
 mod tests {
-    use util::{init_debug_logger, init_logger};
-
-    use libc::exit;
+    use util::init_logger;
 
     use super::*;
+    use api_client::api;
     #[tokio::test]
     async fn test_start_pipy_repo() {
         init_logger();
 
         start_pipy_repo(Some(6060));
-        thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to start
         api::create_codebase("127.0.0.1", 6060, "test1")
             .await
             .unwrap();
@@ -52,7 +51,7 @@ mod tests {
         assert!(codebase_list.contains(&"/test1".to_string()));
         assert!(codebase_list.contains(&"/test2".to_string()));
         unsafe {
-            exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
+            libc::exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
         }
     }
 }
