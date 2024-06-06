@@ -8,7 +8,9 @@ mod util;
 extern "C" {
     pub fn pipy_main(argc: c_int, argv: *const *const c_char) -> c_int;
 }
-/// start pipy in repo mod with port, default port is 6060
+/// start pipy in repo mod with given port, default port is 6060
+/// **Note**: If you invoke this function, you must call `libc::exit(0)` to exit the process finally,
+/// otherwise the `pipy-main` thread will report a `panic!` when the process exits.
 pub fn start_pipy_repo(port: Option<u16>) {
     thread::spawn(move || {
         let mut args: Vec<CString> = vec![];

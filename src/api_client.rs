@@ -1,3 +1,6 @@
+///! Pipy Repo RESTful API Client
+///! according to the API doc: https://flomesh.io/pipy/docs/en/operating/repo/3-api
+///! some details may be different, please refer to pipy code in `pipy/src/admin-service.cpp`
 use api::ApiError;
 
 pub struct ApiClient {
