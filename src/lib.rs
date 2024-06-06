@@ -33,7 +33,7 @@ mod tests {
     use super::*;
     #[tokio::test]
     async fn test_start_pipy_repo() {
-        init_logger();
+        init_logger("info");
         let port = 6061;
         let client = api_client::ApiClient::new("127.0.0.1", port);
         start_pipy_repo(Some(port));
