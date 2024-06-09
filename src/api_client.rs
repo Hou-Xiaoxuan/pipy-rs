@@ -302,9 +302,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_api() {
-        init_logger("info");
+        init_logger("debug");
         let pipy_port = 6060;
-        start_pipy_repo(Some(pipy_port));
+        let _ = start_pipy_repo(Some(pipy_port));
 
         let repo_name = "hello";
         let client = ApiClient::new("127.0.0.1", pipy_port);
@@ -358,9 +358,5 @@ mod tests {
         client.stop_repo().await.unwrap();
         let running_repo = client.current_repo().await.unwrap();
         assert!(running_repo.is_none(), "should not have running repo");
-
-        unsafe {
-            libc::exit(0); // exit the test. Otherwise, the `pipy-main` thread will report `panic!`, wait for a better solution
-        }
     }
 }
