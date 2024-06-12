@@ -13,13 +13,15 @@ fn main() {
     config.define("CMAKE_C_COMPILER", "clang");
     config.define("CMAKE_CXX_COMPILER", "clang++");
     
-    config.define("CMAKE_BUILD_PARALLEL_LEVEL", "4"); // didn't work, compile too slow
 
+    std::env::set_var("CMAKE_BUILD_PARALLEL_LEVEL", "4");
     if profile == "release" {
         config.define("CMAKE_BUILD_TYPE", "Release");
     } else {
         config.define("CMAKE_BUILD_TYPE", "Debug");
     }
+    // add target to build
+    config.no_build_target(true);
 
     // build
     let dst = config.build();
