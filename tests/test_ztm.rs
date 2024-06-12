@@ -31,7 +31,7 @@ pub async fn start_ztm_agent() {
     api_client.publish_changes(agent_name).await.unwrap();
     let _ = api_client.get_codebase(agent_name).await.unwrap();
     api_client.start_repo(agent_name).await.unwrap();
-    thread::sleep(std::time::Duration::from_secs(1)); // wait for  start
+    tracing::info!("start ztm agent");
 
     // test curl localhost:7777
     let resp = reqwest::get("http://127.0.0.1:7777/api/version")
@@ -39,4 +39,5 @@ pub async fn start_ztm_agent() {
         .unwrap();
     tracing::debug!("resp: {:?}", resp);
     assert!(resp.status().is_success());
+    tracing::info!("test ztm agent success");
 }

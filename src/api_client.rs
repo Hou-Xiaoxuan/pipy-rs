@@ -318,6 +318,7 @@ mod tests {
         // create codebase
         client.create_codebase(repo_name).await.unwrap();
         let _ = client.get_codebase(repo_name).await.unwrap();
+        tracing::info!("create codebase {}", repo_name);
 
         // update `main.js` to a simple http server
         let default_main_js = client.get_file(repo_name, "main.js").await.unwrap();
@@ -335,6 +336,7 @@ mod tests {
         client.publish_changes(repo_name).await.unwrap(); // TODO: update_file seems not work, api may be wrong
         let codebase = client.get_codebase(repo_name).await.unwrap();
         assert!(codebase.edit_files.is_empty(), "publish_changes failed");
+        tracing::info!("publish changes of repo {}", repo_name);
 
         // start the repo
         let running_repo = client.current_repo().await.unwrap();
@@ -348,17 +350,20 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(resp, "Hello world!");
+        tracing::info!("start repo {} success", repo_name);
 
         // replace the repo with another one
         let another_repo_name = "world";
         client.create_codebase(another_repo_name).await.unwrap();
         client.start_repo(another_repo_name).await.unwrap();
-        let running_repo = client.current_repo().await.unwrap();
-        assert_eq!(running_repo.unwrap(), another_repo_name);
+        let running_repo = client.current_repo().await.unwrap().unwrap();
+        assert_eq!(running_repo, another_repo_name);
+        tracing::info!("running_repo change to: {:?}", running_repo);
 
         // stop the repo
         client.stop_repo().await.unwrap();
         let running_repo = client.current_repo().await.unwrap();
         assert!(running_repo.is_none(), "should not have running repo");
+        tracing::info!("stop repo, test success");
     }
 }
