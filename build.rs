@@ -9,6 +9,10 @@ fn main() {
 
     // TODO: change to static library
     config.define("PIPY_SHARED", "ON");
+    // set to use clang/clang++ to compile
+    config.define("CMAKE_C_COMPILER", "clang");
+    config.define("CMAKE_CXX_COMPILER", "clang++");
+    
     config.define("CMAKE_BUILD_PARALLEL_LEVEL", "4"); // didn't work, compile too slow
 
     if profile == "release" {
