@@ -57,6 +57,7 @@ impl Pipy {
             unsafe {
                 pipy_exit(0);
             }
+            self.is_started.store(false, atomic::Ordering::SeqCst);
             thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to exit
             tracing::info!("exit pipy");
         }
