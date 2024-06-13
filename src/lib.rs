@@ -55,7 +55,7 @@ impl Pipy {
     pub fn exit(&self) {
         if self.is_started.load(atomic::Ordering::SeqCst) {
             unsafe {
-                pipy_exit(0);
+                pipy_exit(1);
             }
             self.is_started.store(false, atomic::Ordering::SeqCst);
             thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to exit
