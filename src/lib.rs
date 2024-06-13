@@ -8,6 +8,15 @@ use std::{
 
 pub mod api_client;
 mod util;
+
+#[cfg(feature = "use_tcmalloc")]
+extern crate tcmalloc;
+#[cfg(feature = "use_tcmalloc")]
+use tcmalloc::TCMalloc;
+#[cfg(feature = "use_tcmalloc")]
+#[global_allocator]
+static GLOBAL: TCMalloc = TCMalloc;
+
 #[link(name = "pipy", kind = "dylib")]
 extern "C" {
     pub fn pipy_main(argc: c_int, argv: *const *const c_char) -> c_int;

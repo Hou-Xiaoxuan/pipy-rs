@@ -15,6 +15,13 @@ fn main() {
     
 
     std::env::set_var("CMAKE_BUILD_PARALLEL_LEVEL", "4");
+
+    // use `tcmalloc` if it exists
+    // because pipy will use `tcmalloc` if it exists, and rust must unify the memory allocator
+    if exist_tcmalloc() {
+        println!("cargo:rustc-cfg=feature=\"use_tcmalloc\"");
+    }
+
     if profile == "release" {
         config.define("CMAKE_BUILD_TYPE", "Release");
     } else {
@@ -45,4 +52,10 @@ fn main() {
     // println!("cargo:rustc-link-lib=yaml");
     // println!("cargo:rustc-link-lib=leveldb");
     // println!("cargo:rustc-link-lib=z");
+}
+
+// check if tcmalloc library exists in the system
+fn exist_tcmalloc() -> bool {
+    // TODO: look for a way to check if tcmalloc exists or libpipy use tcmalloc
+    false
 }
