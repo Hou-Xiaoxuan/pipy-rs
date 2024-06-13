@@ -12,7 +12,6 @@ fn main() {
     // set to use clang/clang++ to compile
     config.define("CMAKE_C_COMPILER", "clang");
     config.define("CMAKE_CXX_COMPILER", "clang++");
-    
 
     std::env::set_var("CMAKE_BUILD_PARALLEL_LEVEL", "4");
 
@@ -35,7 +34,10 @@ fn main() {
 
     // ** `cargo:rustc-*` format is used to pass information to the cargo build system
     // parse to `rustc` to look for dynamic library, used in running
-    println!("cargo:rustc-link-arg=-Wl,-rpath,{}/build", dst.display());
+    println!(
+        "cargo:rustc-link-arg=-Wl,-rpath,{}/build,-rpath,$ORIGIN",
+        dst.display()
+    );
     // add the path to the library to the linker search path, used in build
     println!("cargo:rustc-link-search={}/build", dst.display());
 
