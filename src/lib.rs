@@ -23,21 +23,21 @@ extern "C" {
 
     pub fn pipy_exit(force: c_int);
 }
-/// start pipy in repo mod with given port, default port is 6060
-pub fn start_pipy_repo(port: Option<u16>) -> Pipy {
+/// start pipy in repo mode with given port, default port is 6060
+pub fn start_pipy_repo(port: Option<u16>) -> PipyRepo {
     let port = port.unwrap_or(6060);
-    let pipy = Pipy::new(port);
+    let pipy = PipyRepo::new(port);
     pipy.start();
     pipy
 }
 
-pub struct Pipy {
+pub struct PipyRepo {
     port: u16,
     is_started: Arc<atomic::AtomicBool>,
 }
-impl Pipy {
+impl PipyRepo {
     pub fn new(port: u16) -> Self {
-        Pipy {
+        PipyRepo {
             port,
             is_started: Arc::new(atomic::AtomicBool::new(false)),
         }
@@ -58,6 +58,7 @@ impl Pipy {
             unsafe {
                 pipy_main(c_args.len() as c_int, c_args.as_ptr());
             }
+            tracing::info!("pipy exited");
         });
         thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to start
     }
@@ -68,11 +69,11 @@ impl Pipy {
             }
             self.is_started.store(false, atomic::Ordering::SeqCst);
             thread::sleep(std::time::Duration::from_secs(1)); // wait for pipy to exit
-            tracing::info!("exit pipy");
+            tracing::info!("excute pipy_exit");
         }
     }
 }
-impl Drop for Pipy {
+impl Drop for PipyRepo {
     fn drop(&mut self) {
         self.exit();
     }
@@ -121,10 +122,11 @@ mod tests {
 
         repo.exit();
         std::thread::sleep(std::time::Duration::from_secs(3));
+
         let resp = reqwest::get(format!("http://127.0.0.1:{}/api/v1/repo", port))
             .await
             .unwrap();
-        // assert_eq!(resp.status(), 502, "pipy repo didn't exit"); // TODO can't pass, pipy repo didn't exit
+        assert_eq!(resp.status(), 502, "pipy repo didn't exit"); // TODO can't pass, pipy repo didn't exit
         tracing::debug!("resp after exit: {:?}", resp.text().await.unwrap());
     }
 

@@ -11,7 +11,7 @@ pub async fn start_ztm_agent() {
     )
     .unwrap();
     let port = 6060;
-    let pipy = pipy_rs::Pipy::new(port);
+    let pipy = pipy_rs::PipyRepo::new(port);
     pipy.start();
 
     let agent_files = vec!["api.js", "db.js", "main.js", "mesh.js", "options.js"];
